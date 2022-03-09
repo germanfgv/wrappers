@@ -1,35 +1,102 @@
 #!/bin/bash
- 
-echo This REPACK wrapper works by creating a new project area, so it should be used on a local lxplus area. If you already have a project area on the folder then this wrapper will not work
-echo Please provide the run number i.e. 326607
-read runnum
-echo Please provide the LFN i.e. /store/whatever
-read lfn
+############################################################
+# Help                                                     #
+############################################################
+Help()
+{
+   # Display Help
+   echo "This script creates a Repack job configuration file"
+   echo "that can later be executed using cmsRun."
+   echo
+   echo "Syntax: repackWrapper.sh [-r|j|h]"
+   echo "options:"
+   echo "-r    User provides the run number and stream name."
+   echo "      Creates a Repack configuration that mimicks"
+   echo "      the one used in product."
+   echo "      usage: repackWrapper.sh -r <run_number> lfn"
+   echo ""
+   echo "-j    User provides a JSON file containing the"
+   echo "      desired configuration, i. e. GT, scenario, etc"
+   echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=322963&stream=Calibration"
+   echo "      usage: expressWrapper.sh -j <path_to_json> lfn"
+   echo ""
+   echo "-h    Prints this help message"
+   echo
+}
 
-curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=$runnum" > any5.json
-scramarchj=`cat any5.json | jq -r '.result[].scram_arch'`
-cmsswj=`cat any5.json | jq -r '.result[].cmssw'`
-scenarioj=`cat any5.json | jq -r '.result[].scenario'`
-globaltagj=`cat any5.json | jq -r '.result[].global_tag'`
-alcaskimj=`cat any5.json | jq -r '.result[].alca_skim'`
+############################################################
+############################################################
+# Main program                                             #
+############################################################
+############################################################
+
+# Get the options
+json_filename="config.json"
+while getopts ":hr:" option; do
+    case $option in
+        r) # Get JSON from t0WMADataSvc
+            if [ "$#" -ne 3 ]; then
+                echo "Illegal number of parameters.";
+                Help
+                exit
+            fi
+            run_num=$2; stream_name=$3; lfn=$4
+            curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=$run_num" > $json_filename;;
+        j) # User provided JSON
+            if [ "$#" -ne 3 ]; then
+                echo "Illegal number of parameters.";
+                Help;
+                exit;
+            fi
+            json_filename=$2; lfn=$3;; 
+        h) # display Help
+            Help
+            exit;;
+        \?) # Invalid option
+            echo "Error: Invalid option"
+            Help
+            exit;;
+   esac
+done
+
+
+scramarchj=`cat $json_filename | jq -r '.result[0].scram_arch'`
+cmsswj=`cat $json_filename | jq -r '.result[0].cmssw'`
+scenarioj=`cat $json_filename | jq -r '.result[0].scenario'`
+globaltagj=`cat $json_filename | jq -r '.result[0].global_tag'`
+alcaskimj=`cat $json_filename | jq -r '.result[0].alca_skim'`
 alcaskim=${alcaskimj[@]//,/+}
-physkim=`cat any5.json | jq -r '.result[].physics_skim'`
-nthread=`cat any5.json | jq -r '.result[].multicore'`
+physkim=`cat $json_filename | jq -r '.result[0].physics_skim'`
+nthread=`cat $json_filename | jq -r '.result[0].multicore'`
+
 echo $scramarchj $cmsswj $scenarioj $globaltagj $alcaskimj $physkimi $nthread
-rm any5.json
+rm $json_filename
 #source cmsset values
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
 # define architecture as requested by user
 SCRAM_ARCH=$scramarchj; export SCRAM_ARCH
- 
+
 #create the project with CMSSW version given by the user
 scramv1 project CMSSW $cmsswj
 cd $cmsswj/src/
 
 #source cms environment variables
 eval `scramv1 runtime -sh`
-python $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunRepack.py --select-events HLT:path1,HLT:path2 --lfn=$lfn
+
+echo CMSSW $cmsswj
+if [[ $cmsswj > "CMSSW_12_" ]]
+then
+    echo "Using Python3 CMSSW version"
+    command="python3"
+else
+    echo "Using Python2 CMSSW version"
+    command="python"
+fi
+
+echo $command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunRepack.py --lfn=$lfn
+
+$command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunRepack.py --lfn=$lfn
 echo If you want to do cmsRun -e RunRepackCfg.py then you should move to the following folder 
 pwd
 eval `scramv1 runtime -sh`
