@@ -32,7 +32,7 @@ Help()
 
 # Get the options
 json_filename="config.json"
-while getopts ":hr:" option; do
+while getopts ":hrj:" option; do
     case $option in
         r) # Get JSON from t0WMADataSvc
             if [ "$#" -ne 3 ]; then
@@ -70,7 +70,7 @@ physkim=`cat $json_filename | jq -r '.result[0].physics_skim'`
 nthread=`cat $json_filename | jq -r '.result[0].multicore'`
 
 echo $scramarchj $cmsswj $scenarioj $globaltagj $alcaskimj $physkimi $nthread
-rm $json_filename
+
 #source cmsset values
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
