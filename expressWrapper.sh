@@ -59,8 +59,8 @@ while getopts ":hjr:" option; do
    esac
 done
 
-scramarchj=`cat $json_filename | jq -r '.result[].scram_arch'`
-cmsswj=`cat $json_filename | jq -r '.result[].cmssw'`
+scramarchj=`cat $json_filename | jq -r '.result[].reco_scram_arch'`
+cmsswj=`cat $json_filename | jq -r '.result[].reco_cmssw'`
 scenarioj=`cat $json_filename | jq -r '.result[].scenario'`
 globaltagj=`cat $json_filename | jq -r '.result[].global_tag'`
 alcaskimj=`cat $json_filename | jq -r '.result[].alca_skim'`
@@ -95,13 +95,13 @@ fi
 if [[ $cmsswj > "CMSSW_11_" ]]
 then
     echo "Using nThreads"
-    options="--nThreads=nthread"
+    options="--nThreads=$nthread"
 else
     options=""
 fi
 
 
-if [ $alcaskim <> 'null' ]
+if [ $alcaskim != 'null' ]
 then
     
     options="$options --alcarecos=$alcaskim"
