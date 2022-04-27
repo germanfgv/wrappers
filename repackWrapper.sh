@@ -18,7 +18,7 @@ Help()
    echo "-j    User provides a JSON file containing the"
    echo "      desired configuration, i. e. GT, scenario, etc"
    echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=322963&stream=Calibration"
-   echo "      usage: expressWrapper.sh -j <path_to_json> lfn"
+   echo "      usage: repackWrapper.sh -j <path_to_json> lfn"
    echo ""
    echo "-h    Prints this help message"
    echo
@@ -40,7 +40,7 @@ while getopts ":hrj:" option; do
                 Help
                 exit
             fi
-            run_num=$2; stream_name=$3; lfn=$4
+            run_num=$2; lfn=$3
             curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=$run_num" > $json_filename;;
         j) # User provided JSON
             if [ "$#" -ne 3 ]; then

@@ -1,6 +1,4 @@
 #!/bin/bash
-
-#!/bin/bash
 ############################################################
 # Help                                                     #
 ############################################################
@@ -10,17 +8,17 @@ Help()
    echo "This script creates a Express job configuration file"
    echo "that can later be executed using cmsRun."
    echo
-   echo "Syntax: expressWrapper.sh [-r|j|h]"
+   echo "Syntax: harvestWrapper.sh [-r|j|h]"
    echo "options:"
    echo "-r    User provides the run number and stream name."
    echo "      Creates an Express configuration that mimicks"
    echo "      the one used in product."
-   echo "      usage: expressWrapper.sh -r <run_number> <stream_name> lfn"
+   echo "      usage: harvestWrapper.sh -r <run_number> <primary_dataset> lfn"
    echo ""
    echo "-j    User provides a JSON file containing the"
    echo "      desired configuration, i. e. GT, scenario, etc"
-   echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=322963&stream=Calibration"
-   echo "      usage: expressWrapper.sh -j <path_to_json> lfn"
+   echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=322963&primary_dataset=Calibration"
+   echo "      usage: harvestWrapper.sh -j <path_to_json> lfn"
    echo ""
    echo "-h    Prints this help message"
    echo

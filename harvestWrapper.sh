@@ -1,13 +1,64 @@
 #!/bin/bash
+############################################################
+# Help                                                     #
+############################################################
+Help()
+{
+   # Display Help
+   echo "This script creates a Express job configuration file"
+   echo "that can later be executed using cmsRun."
+   echo
+   echo "Syntax: harvestWrapper.sh [-r|j|h]"
+   echo "options:"
+   echo "-r    User provides the run number and stream name."
+   echo "      Creates an Express configuration that mimicks"
+   echo "      the one used in product."
+   echo "      usage: harvestWrapper.sh -r <run_number> <primary_dataset> lfn"
+   echo ""
+   echo "-j    User provides a JSON file containing the"
+   echo "      desired configuration, i. e. GT, scenario, etc"
+   echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=322963&primary_dataset=ZeroBias"
+   echo "      usage: harvestWrapper.sh -j <path_to_json> lfn"
+   echo ""
+   echo "-h    Prints this help message"
+   echo
+}
 
-echo This HARVEST wrapper works by creating a new project area, so it should be used on a local lxplus area. If you already have a project area on the folder then this wrapper will not work. If you want to obtain run number and dataset from an LFN, please use DAS.
+############################################################
+############################################################
+# Main program                                             #
+############################################################
+############################################################
 
-    echo Please provide the run number i.e. 321295
-    read runnum
-    echo Please provide the full dataset name i.e. /ZeroBias/Run2018D-PromptReco-v2/DQMIO
-    read datanam
-    echo Please provide the LFN i.e. /store/whatever. For this wrapper you will need to provide an lfn of a file located at CERN, or you will need to get the file on your local machine by using xrootd or by requesting the transfer from tape. If you have the file in your local area then write the input as follows: file:PFN i.e. file:/afs/cern.ch/user/f/fiori/public/Andres/9F411A2F-9C94-D54F-894B-83D60BF55C41.root
-    read lfn
+
+# Get the options
+json_filename="config.json"
+while getopts ":hjr:" option; do
+    case $option in
+        r) # Get JSON from t0WMADataSvc
+            if [ "$#" -ne 4 ]; then
+                echo "Illegal number of parameters.";
+                Help
+                exit
+            fi
+            run_num=$2; pd=$3; lfn=$4
+            curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=$run_num&primary_dataset=$pd_name" > $json_filename;;
+        j) # User provided JSON
+            if [ "$#" -ne 3 ]; then
+                echo "Illegal number of parameters.";
+                Help;
+                exit;
+            fi
+            json_filename=$2; lfn=$3;; 
+        h) # display Help
+            Help
+            exit;;
+        \?) # Invalid option
+            echo "Error: Invalid option"
+            Help
+            exit;;
+   esac
+done
 
 datanam2=$(echo $datanam| cut -d'/' -f 2)
 curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=$runnum&primary_dataset=$datanam2" > any2.json
