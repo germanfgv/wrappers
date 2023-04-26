@@ -5,20 +5,20 @@
 Help()
 {
    # Display Help
-   echo "This script creates a Express job configuration file"
+   echo "This script creates a Reco job configuration file"
    echo "that can later be executed using cmsRun."
    echo
-   echo "Syntax: harvestWrapper.sh [-r|j|h]"
+   echo "Syntax: recoWrapper.sh [-r|j|h]"
    echo "options:"
    echo "-r    User provides the run number and stream name."
-   echo "      Creates an Express configuration that mimicks"
+   echo "      Creates an Reco configuration that mimicks"
    echo "      the one used in product."
-   echo "      usage: harvestWrapper.sh -r <run_number> <primary_dataset> lfn"
+   echo "      usage: recoWrapper.sh -r <run_number> <primary_dataset> lfn"
    echo ""
    echo "-j    User provides a JSON file containing the"
    echo "      desired configuration, i. e. GT, scenario, etc"
    echo "      Visit this url foran example JSON: https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=322963&primary_dataset=Calibration"
-   echo "      usage: harvestWrapper.sh -j <path_to_json> lfn"
+   echo "      usage: recoWrapper.sh -j <path_to_json> lfn"
    echo ""
    echo "-h    Prints this help message"
    echo
@@ -66,9 +66,10 @@ globaltagj=`cat $json_filename | jq -r '.result[].global_tag'`
 alcaskimj=`cat $json_filename | jq -r '.result[].alca_skim'`
 alcaskim=${alcaskimj[@]//,/+}
 physkimj=`cat $json_filename | jq -r '.result[].physics_skim'`
+dqmseqj=`cat $json_filename | jq -r '.result[].dqm_seq'`
 physkim=${physkimj[@]//,/+}
 nthread=`cat $json_filename | jq -r '.result[].multicore'`
-echo $scramarchj $cmsswj $scenarioj $globaltagj $alcaskimj $physkimi $nthread
+echo $scramarchj $cmsswj $scenarioj $globaltagj $alcaskimj $physkimi $nthread $dqmseqj
 
 #source cmsset values
 source /cvmfs/cms.cern.ch/cmsset_default.sh
@@ -114,7 +115,15 @@ then
     options="$options --PhysicsSkims=$physkim"
 fi
 
-$command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunPromptReco.py --scenario=$scenarioj --reco --aod --miniaod --dqmio --global-tag $globaltagj --lfn=$lfn $options
+if [ $dqmseqj != 'null' ]
+then
+    
+    options="$options --dqmio=$dqmseqj"
+else
+    options="$options --dqmio"
+fi
+
+$command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunPromptReco.py --scenario=$scenarioj --reco --aod --miniaod --global-tag $globaltagj --lfn=$lfn $options
 
 echo If you want to use cmsRun -e RunPromptRecoCfg.py then you should move to the following folder
 pwd
