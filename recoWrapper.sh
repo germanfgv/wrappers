@@ -67,6 +67,7 @@ alcaskimj=`cat $json_filename | jq -r '.result[].alca_skim'`
 alcaskim=${alcaskimj[@]//,/+}
 physkimj=`cat $json_filename | jq -r '.result[].physics_skim'`
 dqmseqj=`cat $json_filename | jq -r '.result[].dqm_seq'`
+dqmseq=${dqmseqj[@]//,/+}
 physkim=${physkimj[@]//,/+}
 nthread=`cat $json_filename | jq -r '.result[].multicore'`
 echo $scramarchj $cmsswj $scenarioj $globaltagj $alcaskimj $physkimi $nthread $dqmseqj
@@ -115,10 +116,10 @@ then
     options="$options --PhysicsSkims=$physkim"
 fi
 
-if [ $dqmseqj != 'null' ]
+if [ $dqmseq != 'null' ]
 then
     
-    options="$options --dqmio=$dqmseqj"
+    options="$options --dqmio --dqmSeq=$dqmseq"
 else
     options="$options --dqmio"
 fi
