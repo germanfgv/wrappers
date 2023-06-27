@@ -98,7 +98,7 @@ fi
 if [[ $cmsswj > "CMSSW_11_" ]]
 then
     echo "Using nThreads"
-    options="--nThreads=nthread"
+    options="--nThreads=$nthread"
 else
     options=""
 fi
@@ -123,6 +123,7 @@ else
     options="$options --dqmio"
 fi
 
+echo "$command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunPromptReco.py --scenario=$scenarioj --reco --aod --miniaod --global-tag $globaltagj --lfn=$lfn $options"
 $command $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunPromptReco.py --scenario=$scenarioj --reco --aod --miniaod --global-tag $globaltagj --lfn=$lfn $options
 
 echo If you want to use cmsRun -e RunPromptRecoCfg.py then you should move to the following folder
