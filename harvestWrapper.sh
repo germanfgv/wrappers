@@ -5,7 +5,7 @@
 Help()
 {
    # Display Help
-   echo "This script creates a Express job configuration file"
+   echo "This script creates a DQMHarvesting job configuration file"
    echo "that can later be executed using cmsRun."
    echo
    echo "Syntax: harvestWrapper.sh [-r|j|h]"
@@ -32,6 +32,8 @@ Help()
 
 
 # Get the options
+
+
 json_filename="config.json"
 while getopts ":hjr:" option; do
     case $option in
@@ -41,8 +43,20 @@ while getopts ":hjr:" option; do
                 Help
                 exit
             fi
-            run_num=$2; pd=$3; lfn=$4
-            curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=$run_num&primary_dataset=$pd_name" > $json_filename;;
+            run_num=$2; pd=$3; lfn=$4;
+            curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=$run_num&primary_dataset=$pd" > $json_filename
+            grep "primary_dataset" ./$json_filename
+            if [ $? == 0 ]; then 
+                echo "Found Reco configuration"
+            else
+                echo "No PD config. Trying Express configuration"
+                curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/express_config?run=$run_num&stream=$pd" > $json_filename
+                cat $json_filename | grep stream
+                if [ $? != 0 ]; then
+                    echo "Unable to find Reco or Express configurations for run $run_num and $pd."
+                    exit
+                fi
+            fi;;
         j) # User provided JSON
             if [ "$#" -ne 3 ]; then
                 echo "Illegal number of parameters.";
@@ -60,14 +74,12 @@ while getopts ":hjr:" option; do
    esac
 done
 
-datanam2=$(echo $datanam| cut -d'/' -f 2)
-curl "https://cmsweb.cern.ch/t0wmadatasvc/prod/reco_config?run=$runnum&primary_dataset=$datanam2" > any2.json
-scramarchj=`cat any2.json | jq -r '.result[].scram_arch'`
-cmsswj=`cat any2.json | jq -r '.result[].cmssw'`
-scenarioj=`cat any2.json | jq -r '.result[].scenario'`
-globaltagj=`cat any2.json | jq -r '.result[].global_tag'`
+scramarchj=`cat $json_filename | jq -r '.result[].scram_arch'`
+cmsswj=`cat $json_filename | jq -r '.result[].cmssw'`
+scenarioj=`cat $json_filename | jq -r '.result[].scenario'`
+globaltagj=`cat $json_filename | jq -r '.result[].global_tag'`
 echo $scramarchj $cmsswj $scenarioj $globaltagj
-rm any2.json
+
 #source cmsset values
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
@@ -80,7 +92,7 @@ cd $cmsswj/src/
 #source cms environment variables
 eval `scramv1 runtime -sh`
 
-python $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunDQMHarvesting.py --scenario=$scenarioj --global-tag $globaltagj --lfn=$lfn --run=$runnum --dataset=$datanam --dqmio
+python3 $CMSSW_RELEASE_BASE/src/Configuration/DataProcessing/test/RunDQMHarvesting.py --scenario=$scenarioj --global-tag $globaltagj --lfn=$lfn --run=$runnum --dataset=$datanam --dqmio
 echo If you want to use cmsRun -j FrameworkJobReport.xml RunDQMHarvestingCfg.py then you should move to the following folder and make sure that the file is actually present in the local storage. Otherwise cmsRun will fail.
 pwd
 eval `scramv1 runtime -sh`
