@@ -96,7 +96,7 @@ else
     command="python"
 fi
 
-if [[ $cmsswj > "CMSSW_11_" ]]
+if [[ $cmsswj > "CMSSW_11_" && $cmsswj < "CMSSW_13_3_" ]]
 then
     echo "Using nThreads"
     options="--nThreads=$nthread"
